@@ -1,22 +1,21 @@
-import React, { useState } from 'react';
+import { useState, useMemo } from "react";
 
 import {
   Plus,
   RefreshCw,
   Library,
   CheckCircle,
-  X,
   Search
-} from 'lucide-react';
+} from "lucide-react";
 
-import { useBooks } from '../hooks/useBooks';
+import useBooks from "../hooks/useBooks";
 
-import BookForm from '../components/BookForm';
-import BookCard from '../components/BookCard';
-import DeleteConfirmDialog from '../components/DeleteConfirmDialog';
-import LoadingSpinner from '../components/LoadingSpinner';
-import ErrorAlert from '../components/ErrorAlert';
-import EmptyState from '../components/EmptyState';
+import BookForm from "../components/BookForm";
+import BookCard from "../components/BookCard";
+import DeleteConfirmDialog from "../components/DeleteConfirmDialog";
+import LoadingSpinner from "../components/LoadingSpinner";
+import ErrorAlert from "../components/ErrorAlert";
+import EmptyState from "../components/EmptyState";
 
 
 const BookManager = () => {
@@ -24,32 +23,27 @@ const BookManager = () => {
 
   const {
     books,
-    loadingStates,
-    errorStates,
-    currentBook,
+    loading,
+    error,
     successMessage,
     deletingId,
 
-    getAllBooks,
+    fetchBooks,
     addBook,
     editBook,
     removeBook,
 
-    setBookToEdit,
-    clearError,
-    clearSuccess,
-
   } = useBooks();
+  const safeBooks = Array.isArray(books) ? books : [];
 
 
+
+  const [currentBook, setCurrentBook] = useState(null);
 
   const [showForm, setShowForm] = useState(false);
 
   const [bookToDelete, setBookToDelete] = useState(null);
 
-
-
-  // Search & Sort states
 
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -57,25 +51,19 @@ const BookManager = () => {
 
 
 
-
   const handleAddBook = async (bookData) => {
 
     try {
+await addBook(bookData);
 
-      await addBook(bookData);
-
-      setShowForm(false);
-
-
+setShowForm(false);
     } catch (err) {
-
+ 
       console.error("Add book failed:", err);
 
     }
 
   };
-
-
 
 
 
@@ -87,6 +75,7 @@ const BookManager = () => {
 
       setShowForm(false);
 
+      setCurrentBook(null);
 
     } catch (err) {
 
@@ -98,170 +87,132 @@ const BookManager = () => {
 
 
 
-
-
   const handleEditClick = (book) => {
 
-
-    setBookToEdit(book);
+    setCurrentBook(book);
 
     setShowForm(true);
 
-
     window.scrollTo({
-
       top: 0,
-
       behavior: "smooth"
-
     });
 
-
   };
-
-
 
 
 
   const handleDeleteClick = (bookId) => {
 
-
-    const book = books.find(
-
+   const book = safeBooks.find(
       (item) => item._id === bookId
-
     );
-
 
     setBookToDelete(book);
 
-
   };
-
-
 
 
 
   const handleConfirmDelete = async () => {
 
-
     if (!bookToDelete) return;
-
 
 
     try {
 
-
       await removeBook(bookToDelete._id);
-
 
       setBookToDelete(null);
 
 
-
     } catch (err) {
 
-
       console.error(
-
         "Delete book failed:",
-
         err
-
       );
-
 
     }
 
-
   };
-
-
 
 
 
   const handleCancelForm = () => {
 
-
     setShowForm(false);
 
-    setBookToEdit(null);
-
-
-  };
-
-
-
-
-
-  const handleRefresh = () => {
-
-
-    getAllBooks();
-
+    setCurrentBook(null);
 
   };
 
 
 
+  const handleRefresh = async () => {
 
-// Search + Sorting Logic
+    await fetchBooks();
 
-const filteredBooks = books
-  .filter((book) =>
-    (book.title || "")
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase()) ||
-    (book.author || "")
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase())
-  )
-  .sort((a, b) => {
+  };
 
-    if (sortOption === "title-asc") {
-      return a.title.localeCompare(b.title);
-    }
+const filteredBooks = useMemo(() => {
 
-    if (sortOption === "title-desc") {
-      return b.title.localeCompare(a.title);
-    }
+  return safeBooks
+    .filter((book) => book)
+    .filter((book) =>
+      (book.title || "")
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase())
 
-    if (sortOption === "year-new") {
-      return Number(b.publishedYear) - Number(a.publishedYear);
-    }
+      ||
 
-    if (sortOption === "year-old") {
-      return Number(a.publishedYear) - Number(b.publishedYear);
-    }
+      (book.author || "")
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase())
+    )
 
-    return 0;
+    .sort((a, b) => {
 
-  });
+      switch(sortOption) {
 
+        case "title-asc":
+          return (a.title || "")
+            .localeCompare(b.title || "");
 
+        case "title-desc":
+          return (b.title || "")
+            .localeCompare(a.title || "");
 
+        case "year-new":
+  return (
+    new Date(b.publishedDate).getTime() -
+    new Date(a.publishedDate).getTime()
+  );
 
+case "year-old":
+  return (
+    new Date(a.publishedDate).getTime() -
+    new Date(b.publishedDate).getTime()
+  );
 
-  return (    <div className="min-h-screen bg-slate-50">
+        default:
+          return 0;
 
+      }
 
-      {/* Header */}
+    });
 
+}, [safeBooks, searchTerm, sortOption]);
+
+  return (
+    <div className="min-h-screen bg-slate-50">
       <header className="bg-white border-b border-slate-200 sticky top-0 z-30">
-
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4">
-
           <div className="flex items-center justify-between">
-
-
             <div className="flex items-center gap-3">
-
               <div className="bg-indigo-600 p-2 rounded-lg">
-
                 <Library className="w-6 h-6 text-white" />
-
               </div>
-
 
               <div>
 
@@ -286,25 +237,29 @@ const filteredBooks = books
 
                 onClick={handleRefresh}
 
-                disabled={loadingStates.fetch}
+                disabled={loading.fetch}
 
                 className="flex items-center gap-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-medium py-2 px-4 rounded-lg disabled:opacity-50"
 
               >
 
                 <RefreshCw
+
                   className={`w-4 h-4 ${
-                    loadingStates.fetch
+                    loading.fetch
                       ? "animate-spin"
                       : ""
                   }`}
+
                 />
 
                 <span className="hidden sm:inline">
                   Refresh
                 </span>
 
+
               </button>
+
 
 
 
@@ -312,7 +267,7 @@ const filteredBooks = books
 
                 onClick={() => {
 
-                  setBookToEdit(null);
+                  setCurrentBook(null);
 
                   setShowForm(true);
 
@@ -327,6 +282,7 @@ const filteredBooks = books
                 <span className="hidden sm:inline">
                   Add Book
                 </span>
+
 
               </button>
 
@@ -348,8 +304,6 @@ const filteredBooks = books
 
 
 
-        {/* Success Message */}
-
         {successMessage && (
 
           <div className="mb-6 bg-emerald-50 border border-emerald-200 rounded-lg px-4 py-3 flex items-center gap-3">
@@ -362,14 +316,6 @@ const filteredBooks = books
 
             </p>
 
-
-            <button onClick={clearSuccess}>
-
-              <X className="w-4 h-4"/>
-
-            </button>
-
-
           </div>
 
         )}
@@ -379,15 +325,11 @@ const filteredBooks = books
 
 
 
-        {/* Error */}
-
-        {errorStates.fetch && (
+        {error.fetch && (
 
           <ErrorAlert
 
-            message={errorStates.fetch}
-
-            onDismiss={() => clearError("fetch")}
+            message={error.fetch}
 
           />
 
@@ -397,9 +339,6 @@ const filteredBooks = books
 
 
 
-
-
-        {/* Form */}
 
         {showForm && (
 
@@ -420,21 +359,19 @@ const filteredBooks = books
 
               loading={
                 currentBook
-                  ? loadingStates.update
-                  : loadingStates.create
+                  ? loading.update
+                  : loading.add
               }
 
             />
 
 
 
-            {errorStates.create && (
+            {error.add && (
 
               <ErrorAlert
 
-                message={errorStates.create}
-
-                onDismiss={() => clearError("create")}
+                message={error.add}
 
               />
 
@@ -442,18 +379,15 @@ const filteredBooks = books
 
 
 
-            {errorStates.update && (
+            {error.update && (
 
               <ErrorAlert
 
-                message={errorStates.update}
-
-                onDismiss={() => clearError("update")}
+                message={error.update}
 
               />
 
             )}
-
 
 
           </div>
@@ -464,17 +398,12 @@ const filteredBooks = books
 
 
 
-
-
-        {/* Search and Sort */}
-
-        {books.length > 0 && (
+{safeBooks.length > 0 && (
 
           <div className="flex flex-col sm:flex-row gap-4 mb-6">
 
 
             <div className="relative flex-1">
-
 
               <Search className="absolute left-3 top-3 w-5 h-5 text-slate-400"/>
 
@@ -493,9 +422,7 @@ const filteredBooks = books
 
               />
 
-
             </div>
-
 
 
 
@@ -514,21 +441,17 @@ const filteredBooks = books
                 Sort By
               </option>
 
-
               <option value="title-asc">
                 Title A-Z
               </option>
-
 
               <option value="title-desc">
                 Title Z-A
               </option>
 
-
               <option value="year-new">
                 Newest Year
               </option>
-
 
               <option value="year-old">
                 Oldest Year
@@ -546,15 +469,12 @@ const filteredBooks = books
 
 
 
-
-
-        {/* Books */}
-
-        {loadingStates.fetch && books.length === 0 ? (
+{loading.fetch && safeBooks.length === 0 ? (
 
           <LoadingSpinner message="Loading your library..." />
 
-        ) : books.length === 0 ? (
+
+        ) : safeBooks.length === 0 ? (
 
           <EmptyState
 
@@ -562,7 +482,9 @@ const filteredBooks = books
 
           />
 
+
         ) : (
+
 
           <>
 
@@ -576,49 +498,35 @@ const filteredBooks = books
 
 
 
-
-            {filteredBooks.length === 0 ? (
-
-              <p className="text-slate-500">
-
-                No books found.
-
-              </p>
-
-            ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
 
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredBooks.filter(Boolean).map((book)=>(
 
 
-                {filteredBooks.map((book)=>(
+                <BookCard
+
+                  key={book._id}
+
+                  book={book}
+
+                  onEdit={handleEditClick}
+
+                  onDelete={handleDeleteClick}
+
+                  loading={deletingId === book._id}
+
+                />
 
 
-                  <BookCard
-
-                    key={book._id}
-
-                    book={book}
-
-                    onEdit={handleEditClick}
-
-                    onDelete={handleDeleteClick}
-
-                    loading={deletingId === book._id}
-
-                  />
+              ))}
 
 
-                ))}
-
-
-              </div>
-
-
-            )}
+            </div>
 
 
           </>
+
 
         )}
 
@@ -626,8 +534,6 @@ const filteredBooks = books
 
 
       </main>
-
-
 
 
 
@@ -647,11 +553,11 @@ const filteredBooks = books
 
 
 
-
-
     </div>
 
   );
-    };
+
+};
+
 
 export default BookManager;

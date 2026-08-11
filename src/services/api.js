@@ -1,6 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
+
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
 
   headers: {
@@ -8,18 +9,29 @@ const api = axios.create({
   },
 
   timeout: 10000,
+
 });
 
 
-// Request interceptor
+// Request interceptor - Attach JWT token
 api.interceptors.request.use(
+
   (config) => {
+
+    const token = localStorage.getItem("token");
+
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+
     return config;
+
   },
 
   (error) => {
     return Promise.reject(error);
   }
+
 );
 
 
@@ -27,19 +39,21 @@ api.interceptors.request.use(
 api.interceptors.response.use(
 
   (response) => {
+
     return response;
+
   },
 
 
   (error) => {
 
-    let message = 'Something went wrong';
+    let message = "Something went wrong";
 
 
     if (error.response) {
 
-      // Backend returned an error
       const data = error.response.data;
+
 
       message =
         data?.message ||
@@ -48,7 +62,7 @@ api.interceptors.response.use(
 
 
       console.error(
-        'API Error:',
+        "API Error:",
         data
       );
 
@@ -56,13 +70,12 @@ api.interceptors.response.use(
     } else if (error.request) {
 
 
-      // Server not reachable
       message =
-        'Cannot connect to server. Please check your internet connection.';
+        "Cannot connect to server. Please check your internet connection.";
 
 
       console.error(
-        'Network Error: No response from server'
+        "Network Error: No response from server"
       );
 
 
@@ -74,7 +87,6 @@ api.interceptors.response.use(
     }
 
 
-    // Replace axios default message
     error.message = message;
 
 

@@ -9,6 +9,11 @@ import React from 'react';
 import { BookOpen, Pencil, Trash2, Calendar, DollarSign, Tag } from 'lucide-react';
 
 const BookCard = ({ book, onEdit, onDelete, loading }) => {
+  console.log("BOOK IMAGE:", book.coverImage);
+  console.log(
+  "IMAGE URL:",
+  `http://localhost:5000/${book.coverImage.replace(/\\/g, "/")}`
+);
   return (
     <div className="bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300">
       {/* Card Header */}
@@ -27,29 +32,44 @@ const BookCard = ({ book, onEdit, onDelete, loading }) => {
           </div>
         </div>
       </div>
+      {/* Cover Image */}
+{book.coverImage && (
+  <div className="w-full h-48 overflow-hidden">
+    <img
+      src={`http://localhost:5000/${book.coverImage.replace(/\\/g, "/")}`}
+      alt={book.title}
+      className="w-full h-full object-cover"
+    />
+  </div>
+)}
 
       {/* Card Body */}
       <div className="p-5 space-y-3">
-        {/* Genre */}
-        <div className="flex items-center gap-2 text-slate-600">
-          <Tag className="w-4 h-4 text-indigo-500" />
-          <span className="text-sm font-medium">{book.genre || 'Uncategorized'}</span>
-        </div>
-
-        {/* Price */}
-        <div className="flex items-center gap-2 text-slate-600">
-          <DollarSign className="w-4 h-4 text-emerald-500" />
-          <span className="text-sm font-medium">
-            {book.price ? `$${Number(book.price).toFixed(2)}` : 'Free'}
-          </span>
-        </div>
+        {/* Category */}
+<div className="flex items-center gap-2 text-slate-600">
+  <Tag className="w-4 h-4 text-indigo-500" />
+  <span className="text-sm font-medium">
+    {book.category || 'Uncategorized'}
+  </span>
+</div>
+       {/* Price */}
+<div className="flex items-center gap-2 text-slate-600">
+  <DollarSign className="w-4 h-4 text-emerald-500" />
+  <span className="text-sm font-medium">
+    {book.price ? `$${Number(book.price).toFixed(2)}` : 'Free'}
+  </span>
+</div>
 
         {/* Published Year */}
         <div className="flex items-center gap-2 text-slate-600">
           <Calendar className="w-4 h-4 text-amber-500" />
-          <span className="text-sm font-medium">
-            {book.publishedYear || 'Unknown Year'}
-          </span>
+         <span className="text-sm font-medium">
+  {
+    book.publishedDate
+      ? new Date(book.publishedDate).getFullYear()
+      : 'Unknown Year'
+  }
+</span>
         </div>
 
         {/* Action Buttons */}
@@ -67,8 +87,9 @@ const BookCard = ({ book, onEdit, onDelete, loading }) => {
             disabled={loading}
             className="flex-1 flex items-center justify-center gap-1.5 bg-red-50 hover:bg-red-100 text-red-600 font-medium py-2 px-3 rounded-lg transition-colors text-sm disabled:opacity-50"
           >
-            <Trash2 className="w-3.5 h-3.5" />
-            Delete
+           <Trash2 className="w-3.5 h-3.5" />
+
+{loading ? "Deleting..." : "Delete"}
           </button>
         </div>
       </div>

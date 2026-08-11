@@ -1,278 +1,277 @@
-import { useState, useEffect, useCallback } from 'react';
+
+import { useAuth } from "./useAuth";
+import { useState, useCallback, useEffect } from "react";
 
 import {
-  fetchBooks,
-  fetchBookById,
+  fetchBooks as getBooksAPI,
   createBook,
   updateBook,
   deleteBook,
-} from '../services/bookService';
+} from "../services/bookService";
 
-export const useBooks = () => {
+
+const useBooks = () => {
+
+  const { isAuthenticated } = useAuth();
+
   const [books, setBooks] = useState([]);
 
-  // Loading states for each operation
-  const [loadingStates, setLoadingStates] = useState({
+  const [loading, setLoadingState] = useState({
     fetch: false,
-    create: false,
+    add: false,
     update: false,
     delete: false,
   });
 
-  // Error states for each operation
-  const [errorStates, setErrorStates] = useState({
+  const [error, setErrorState] = useState({
     fetch: null,
-    create: null,
+    add: null,
     update: null,
     delete: null,
   });
 
-  const [currentBook, setCurrentBook] = useState(null);
-
-  // Success message
-  const [successMessage, setSuccessMessage] = useState(null);
-
-  // Track which book is being deleted
   const [deletingId, setDeletingId] = useState(null);
 
+  const [successMessage, setSuccessMessage] = useState("");
 
-  // Set loading state
-  const setLoading = useCallback((operation, value) => {
-    setLoadingStates((prev) => ({
+
+  const setLoading = (type, value) => {
+    setLoadingState(prev => ({
       ...prev,
-      [operation]: value,
+      [type]: value
     }));
-  }, []);
+  };
 
 
-  // Set error state
-  const setError = useCallback((operation, message) => {
-    setErrorStates((prev) => ({
+  const setError = (type, value) => {
+    setErrorState(prev => ({
       ...prev,
-      [operation]: message,
+      [type]: value
     }));
-  }, []);
+  };
 
 
-  // Clear error
-  const clearError = useCallback((operation) => {
-    setErrorStates((prev) => ({
-      ...prev,
-      [operation]: null,
-    }));
-  }, []);
+  // AUTO-HIDE SUCCESS MESSAGE
+  useEffect(() => {
 
+    if (!successMessage) return;
 
-  // Clear success message
-  const clearSuccess = useCallback(() => {
-    setSuccessMessage(null);
-  }, []);
+    const timer = setTimeout(() => {
+      setSuccessMessage("");
+    }, 3000);
 
+    return () => clearTimeout(timer);
+
+  }, [successMessage]);
 
 
   // GET ALL BOOKS
-  const getAllBooks = useCallback(async () => {
-    setLoading('fetch', true);
-    setError('fetch', null);
+  const fetchBooks = useCallback(async () => {
+
+    setLoading("fetch", true);
+    setError("fetch", null);
 
     try {
-      const data = await fetchBooks();
-      setBooks(data);
-      return data;
 
-    } catch (err) {
-      setError(
-        'fetch',
-        err.message || 'Failed to fetch books'
+      const data = await getBooksAPI();
+
+      console.log("BOOKS FROM API:", data);
+
+      setBooks(
+        Array.isArray(data)
+          ? data
+          : []
       );
-      return [];
+
+    } catch (error) {
+
+      console.error(
+        "Fetch books error:",
+        error
+      );
+
+      setError(
+        "fetch",
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to fetch books"
+      );
+
+      setBooks([]);
 
     } finally {
-      setLoading('fetch', false);
+
+      setLoading("fetch", false);
+
     }
 
-  }, [setLoading, setError]);
+  }, []);
 
 
+  // ADD BOOK
+  const addBook = async (bookData) => {
 
-  // GET SINGLE BOOK
-  const getBook = useCallback(async (id) => {
-    setLoading('fetch', true);
-    setError('fetch', null);
-
-    try {
-      const data = await fetchBookById(id);
-      setCurrentBook(data);
-      return data;
-
-    } catch (err) {
-      setError(
-        'fetch',
-        err.message || 'Failed to fetch book'
-      );
-      return null;
-
-    } finally {
-      setLoading('fetch', false);
-    }
-
-  }, [setLoading, setError]);
-
-
-
-  // CREATE BOOK
-  const addBook = useCallback(async (bookData) => {
-    setLoading('create', true);
-    setError('create', null);
+    setLoading("add", true);
+    setError("add", null);
 
     try {
+
       const newBook = await createBook(bookData);
 
-      setBooks((prev) => [
-        newBook,
+      console.log("NEW BOOK:", newBook);
+
+      setBooks(prev => [
         ...prev,
+        newBook
       ]);
 
       setSuccessMessage(
-        'Book added successfully!'
+        "Book added successfully!"
       );
 
-      return newBook;
+    } catch (error) {
 
-    } catch (err) {
       setError(
-        'create',
-        err.message || 'Failed to create book'
+        "add",
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to add book"
       );
-      throw err;
+
+      throw error;
 
     } finally {
-      setLoading('create', false);
+
+      setLoading("add", false);
+
     }
 
-  }, [setLoading, setError]);
-
+  };
 
 
   // UPDATE BOOK
-  const editBook = useCallback(async (id, bookData) => {
-    setLoading('update', true);
-    setError('update', null);
+  const editBook = async (id, bookData) => {
+
+    setLoading("update", true);
+    setError("update", null);
 
     try {
-      const updatedBook = await updateBook(
-        id,
-        bookData
-      );
 
-      setBooks((prev) =>
-        prev.map((book) =>
+      const updatedBook =
+        await updateBook(id, bookData);
+
+      setBooks(prev =>
+        prev.map(book =>
           book._id === id
             ? updatedBook
             : book
         )
       );
 
-      setCurrentBook(null);
-
       setSuccessMessage(
-        'Book updated successfully!'
+        "Book updated successfully!"
       );
 
-      return updatedBook;
+    } catch (error) {
 
-    } catch (err) {
       setError(
-        'update',
-        err.message || 'Failed to update book'
+        "update",
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to update book"
       );
-      throw err;
+
+      throw error;
 
     } finally {
-      setLoading('update', false);
+
+      setLoading(
+        "update",
+        false
+      );
+
     }
 
-  }, [setLoading, setError]);
-
+  };
 
 
   // DELETE BOOK
-  const removeBook = useCallback(async (id) => {
+  const removeBook = async (id) => {
 
     setDeletingId(id);
-    setError('delete', null);
+
+    setLoading(
+      "delete",
+      true
+    );
+
+    setError("delete", null);
 
     try {
 
       await deleteBook(id);
 
-      setBooks((prev) =>
+      setBooks(prev =>
         prev.filter(
-          (book) => book._id !== id
+          book =>
+            book._id !== id
         )
       );
 
       setSuccessMessage(
-        'Book deleted successfully!'
+        "Book deleted successfully!"
       );
 
-      return true;
-
-
-    } catch (err) {
+    } catch (error) {
 
       setError(
-        'delete',
-        err.message || 'Failed to delete book'
+        "delete",
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to delete book"
       );
 
-      throw err;
-
+      throw error;
 
     } finally {
 
       setDeletingId(null);
 
+      setLoading(
+        "delete",
+        false
+      );
+
     }
 
-  }, [setError]);
+  };
 
 
-
-  // SET BOOK FOR EDIT
-  const setBookToEdit = useCallback((book) => {
-    setCurrentBook(book);
-  }, []);
-
-
-
-  // Load books when page opens
+  // FETCH BOOKS WHEN USER IS AUTHENTICATED
   useEffect(() => {
-    getAllBooks();
-  }, [getAllBooks]);
 
+    if (isAuthenticated) {
+      fetchBooks();
+    }
+
+  }, [isAuthenticated, fetchBooks]);
 
 
   return {
     books,
-
-    loadingStates,
-    errorStates,
-
-    currentBook,
-    successMessage,
+    loading,
+    error,
     deletingId,
+    successMessage,
 
-    getAllBooks,
-    getBook,
-
+    fetchBooks,
     addBook,
     editBook,
     removeBook,
-
-    setBookToEdit,
-
-    clearError,
-    clearSuccess,
   };
+
 };
+
+
+export default useBooks;
+
