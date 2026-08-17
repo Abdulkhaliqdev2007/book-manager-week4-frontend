@@ -1,23 +1,11 @@
-/**
- * components/LoadingSpinner.jsx
- * 
- * Reusable loading spinner component for various loading states.
- */
-
-import React from 'react';
-import { Loader2 } from 'lucide-react';
-
-const LoadingSpinner = ({ message = 'Loading...', size = 'md' }) => {
-  const sizeClasses = {
-    sm: 'w-5 h-5',
-    md: 'w-8 h-8',
-    lg: 'w-12 h-12',
-  };
-
+const LoadingSpinner = ({ message = "Loading..." }) => {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 py-12">
-      <Loader2 className={`${sizeClasses[size]} text-indigo-600 animate-spin`} />
-      <p className="text-slate-500 font-medium">{message}</p>
+    <div className="flex flex-col items-center justify-center py-16">
+      <div className="w-10 h-10 border-4 border-slate-200 border-t-indigo-600 rounded-full animate-spin"></div>
+
+      <p className="mt-4 text-sm text-slate-500">
+        {message}
+      </p>
     </div>
   );
 };

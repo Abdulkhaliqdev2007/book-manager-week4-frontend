@@ -100,30 +100,13 @@ const BookForm = ({ onSubmit, onCancel, initialData, loading }) => {
     ) {
       newErrors.price = "Price must be a positive number";
     }
-
-
-
-
-    if (!formData.coverImage && !initialData) {
-      newErrors.coverImage = "Cover image is required";
-    }
-
     setErrors(newErrors);
-
     return Object.keys(newErrors).length === 0;
-
   };
-
   // Handle submit
   const handleSubmit = (e) => {
-
-    e.preventDefault();
-
-
+   e.preventDefault();
     if (!validate()) return;
-
-
-
     const bookData = new FormData();
 
 
@@ -388,7 +371,7 @@ const BookForm = ({ onSubmit, onCancel, initialData, loading }) => {
         <div>
 
           <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-            Cover Image {!isEditing && <span className="text-red-500">*</span>}
+            Cover Image 
           </label>
 
 

@@ -1,26 +1,26 @@
-/**
- * components/EmptyState.jsx
- * 
- * Displayed when no books are available.
- */
-
-import React from 'react';
-import { Library } from 'lucide-react';
+import { Library, Plus } from "lucide-react";
 
 const EmptyState = ({ onAddClick }) => {
   return (
-    <div className="flex flex-col items-center justify-center py-16 px-4">
-      <div className="bg-slate-100 p-4 rounded-full mb-4">
-        <Library className="w-10 h-10 text-slate-400" />
+    <div className="flex flex-col items-center justify-center text-center py-16 px-4">
+      <div className="bg-indigo-100 p-4 rounded-full">
+        <Library className="w-10 h-10 text-indigo-600" />
       </div>
-      <h3 className="text-lg font-semibold text-slate-700 mb-1">No books yet</h3>
-      <p className="text-slate-500 text-center max-w-sm mb-5">
-        Your library is empty. Add your first book to get started!
+
+      <h2 className="mt-5 text-xl font-semibold text-slate-800">
+        Your library is empty
+      </h2>
+
+      <p className="mt-2 text-sm text-slate-500 max-w-md">
+        You haven't added any books yet. Start building your personal
+        library by adding your first book.
       </p>
+
       <button
         onClick={onAddClick}
-        className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-6 rounded-lg transition-colors"
+        className="mt-6 flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-lg transition"
       >
+        <Plus className="w-4 h-4" />
         Add Your First Book
       </button>
     </div>

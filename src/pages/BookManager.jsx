@@ -8,7 +8,7 @@ import {
   Search
 } from "lucide-react";
 
-import useBooks from "../hooks/useBooks";
+import { useBooks } from "../context/BookContext";
 
 import BookForm from "../components/BookForm";
 import BookCard from "../components/BookCard";
@@ -21,19 +21,23 @@ import EmptyState from "../components/EmptyState";
 const BookManager = () => {
 
 
-  const {
-    books,
-    loading,
-    error,
-    successMessage,
-    deletingId,
+const {
+  books,
+  loading,
+  error,
+  successMessage,
+  deletingId,
 
-    fetchBooks,
-    addBook,
-    editBook,
-    removeBook,
+  searchTerm,
+  setSearchTerm,
+  sortOption,
+  setSortOption,
 
-  } = useBooks();
+  fetchBooks,
+  addBook,
+  editBook,
+  removeBook,
+} = useBooks();
   const safeBooks = Array.isArray(books) ? books : [];
 
 
@@ -43,13 +47,6 @@ const BookManager = () => {
   const [showForm, setShowForm] = useState(false);
 
   const [bookToDelete, setBookToDelete] = useState(null);
-
-
-  const [searchTerm, setSearchTerm] = useState("");
-
-  const [sortOption, setSortOption] = useState("default");
-
-
 
   const handleAddBook = async (bookData) => {
 

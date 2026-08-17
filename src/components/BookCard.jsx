@@ -9,11 +9,7 @@ import React from 'react';
 import { BookOpen, Pencil, Trash2, Calendar, DollarSign, Tag } from 'lucide-react';
 
 const BookCard = ({ book, onEdit, onDelete, loading }) => {
-  console.log("BOOK IMAGE:", book.coverImage);
-  console.log(
-  "IMAGE URL:",
-  `http://localhost:5000/${book.coverImage.replace(/\\/g, "/")}`
-);
+
   return (
     <div className="bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300">
       {/* Card Header */}
