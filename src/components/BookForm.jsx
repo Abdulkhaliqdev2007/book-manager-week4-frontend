@@ -5,7 +5,15 @@
  * Handles form validation, submission, and loading states.
  */
 import React, { useState, useEffect } from 'react';
-import { BookOpen, Save, X, Loader2 } from 'lucide-react';
+import {
+  BookOpen,
+  Save,
+  X,
+  Loader2,
+  Upload,
+  Image as ImageIcon,
+  Trash2,
+} from 'lucide-react';
 const BookForm = ({ onSubmit, onCancel, initialData, loading }) => {
   const [formData, setFormData] = useState({
     title: '',
@@ -17,6 +25,7 @@ const BookForm = ({ onSubmit, onCancel, initialData, loading }) => {
     coverImage: null,
   });
   const [errors, setErrors] = useState({});
+  const [preview, setPreview] = useState(null);
 
   // Populate form when editing
   useEffect(() => {
@@ -52,23 +61,70 @@ const BookForm = ({ onSubmit, onCancel, initialData, loading }) => {
 
   // Handle input changes
   const handleChange = (e) => {
+  const { name, value, files } = e.target;
 
-    const { name, value, files } = e.target;
+  if (name === "coverImage") {
+    const file = files?.[0];
+
+    if (!file) return;
+
+    // Allowed file types
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+    ];
+
+    // Maximum size: 5MB
+    const maxSize = 5 * 1024 * 1024;
+
+    if (!allowedTypes.includes(file.type)) {
+      setErrors((prev) => ({
+        ...prev,
+        coverImage: "Only JPG, PNG, and WebP images are allowed.",
+      }));
+
+      e.target.value = "";
+      return;
+    }
+
+    if (file.size > maxSize) {
+      setErrors((prev) => ({
+        ...prev,
+        coverImage: "Image size must be less than 5MB.",
+      }));
+
+      e.target.value = "";
+      return;
+    }
 
     setFormData((prev) => ({
       ...prev,
-      [name]: name === "coverImage" ? files[0] : value,
+      coverImage: file,
     }));
 
+    setPreview(URL.createObjectURL(file));
 
-    if (errors[name]) {
-      setErrors((prev) => ({
-        ...prev,
-        [name]: ''
-      }));
-    }
+    setErrors((prev) => ({
+      ...prev,
+      coverImage: "",
+    }));
 
-  };
+    return;
+  }
+
+  setFormData((prev) => ({
+    ...prev,
+    [name]: value,
+  }));
+
+  if (errors[name]) {
+    setErrors((prev) => ({
+      ...prev,
+      [name]: "",
+    }));
+  }
+};
 
   // Validate form
   const validate = () => {
@@ -366,31 +422,102 @@ const BookForm = ({ onSubmit, onCancel, initialData, loading }) => {
   )}
 
 </div>
+{/* Image Upload */}
+<div>
+  <label className="block text-sm font-semibold text-slate-700 mb-2">
+    Cover Image
+  </label>
 
-        {/* Image Upload */}
-        <div>
+  <div className="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:border-indigo-400 transition">
 
-          <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-            Cover Image 
+    <input
+      id="coverImage"
+      type="file"
+      name="coverImage"
+      accept="image/jpeg,image/png,image/webp"
+      onChange={handleChange}
+      className="hidden"
+    />
+
+    {!preview ? (
+      <label
+        htmlFor="coverImage"
+        className="cursor-pointer flex flex-col items-center justify-center"
+      >
+        <div className="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center mb-3">
+          <Upload className="w-6 h-6 text-indigo-600" />
+        </div>
+
+        <p className="text-sm font-semibold text-slate-700">
+          Click to upload a cover image
+        </p>
+
+        <p className="text-xs text-slate-500 mt-1">
+          JPG, PNG or WebP • Maximum 5MB
+        </p>
+      </label>
+    ) : (
+      <div className="space-y-4">
+
+        <div className="relative mx-auto w-fit">
+          <img
+            src={preview}
+            alt="Cover preview"
+            className="w-40 h-56 object-cover rounded-lg shadow-md border border-slate-200"
+          />
+        </div>
+
+        <div className="flex items-center justify-center gap-3">
+
+          <label
+            htmlFor="coverImage"
+            className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-indigo-100 text-indigo-700 rounded-lg text-sm font-semibold hover:bg-indigo-200"
+          >
+            <Upload className="w-4 h-4" />
+            Change Image
           </label>
 
+          <button
+            type="button"
+            onClick={() => {
+              setFormData((prev) => ({
+                ...prev,
+                coverImage: null,
+              }));
 
-          <input
-            type="file"
-            name="coverImage"
-            accept="image/*"
-            onChange={handleChange}
-            className="w-full"
-          />
+              setPreview(null);
 
+              const input = document.getElementById("coverImage");
 
-          {errors.coverImage && (
-            <p className="mt-1 text-sm text-red-500">
-              {errors.coverImage}
-            </p>
-          )}
+              if (input) {
+                input.value = "";
+              }
+            }}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-red-100 text-red-700 rounded-lg text-sm font-semibold hover:bg-red-200"
+          >
+            <Trash2 className="w-4 h-4" />
+            Remove
+          </button>
 
         </div>
+
+        <div className="flex items-center justify-center gap-2 text-sm text-green-600">
+          <ImageIcon className="w-4 h-4" />
+          Image ready to upload
+        </div>
+
+      </div>
+    )}
+
+  </div>
+
+  {errors.coverImage && (
+    <p className="mt-2 text-sm text-red-500">
+      {errors.coverImage}
+    </p>
+  )}
+
+</div>
 
  {/* Buttons */}
         <div className="flex gap-3 pt-2">
