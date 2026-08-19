@@ -3,6 +3,7 @@ import { AuthProvider } from "./hooks/useAuth";
 import { BookProvider } from "./context/BookContext";
 
 import Navbar from "./components/Navbar";
+import Dashboard from "./pages/Dashboard";
 import PrivateRoute from "./components/PrivateRoute";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -35,6 +36,14 @@ function App() {
                 </PrivateRoute>
               }
             />
+            <Route
+  path="/dashboard"
+  element={
+    <PrivateRoute>
+      <Dashboard />
+    </PrivateRoute>
+  }
+/>
 
             <Route
               path="*"
